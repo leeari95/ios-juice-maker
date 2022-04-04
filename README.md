@@ -10,7 +10,17 @@
 - [프로젝트 주요기능](#-프로젝트-주요기능)
 - [UML](#uml)
 - [Trouble Shooting](#-trouble-shooting)
+    + ["Navigation Controller가 두개로 구현되어있는 이유"](#navigation-controller가-두개로-구현되어있는-이유)
+    + ["이름은 같지만 타입이 다른 상황"](#이름은-같지만-타입이-다른-상황)
+    + ["prepare 메소드로 데이터가 제대로 전달이 안되는 경우"](#prepare-메소드로-데이터가-제대로-전달이-안되는-경우)
+    + ["button에 Dynamic Type 적용이 안되는 상황"](#button에-dynamic-type-적용이-안되는-상황)
 - [새롭게 알게된 것](#-새롭게-알게된-것)
+    - ["Sequence에 대해"](#sequence에-대해)
+    - ["연산자도 함수다!"](#연산자도-함수다)
+    - ["Human Interface Guidelines"](#human-interface-guidelines)
+    - ["중첩타입의 용도 이해"](#중첩타입의-용도-이해)
+    - ["Device Orientation"](#device-orientation)
+    - ["topViewController와 visibleViewController?"](#topviewcontroller와-visibleviewcontroller)
 
 </br>
 
@@ -63,31 +73,45 @@
 ## UML
 ![](https://i.imgur.com/n3Bfrs0.jpg)
 
+</br>
+
 ## 🛠 Trouble Shooting
 
-### 1. Navigation Controller가 두개로 구현되어있는 이유
+### "Navigation Controller가 두개로 구현되어있는 이유"
 
-* `상황` 초기 프로젝트 스토리보드에 Navigation Controller가 왜 두개로 나뉘어져 구현되어있는지 이유가 궁금했다. 알고보니 Navigation Bar를 이용하기 위함이였다. 하지만 쥬스메이커 메인화면에서 재고수정하기 버튼을 터치하게 되면 화면 이동방식은 modal이 되어야 한다고 생각했다. 
-* `이유`는 네비게이션을 따라서 스택에 따른 화면을 이동하는 방식이 적절하지 못하다고 생각했기 때문이다. 임시적으로 화면에 들어가서 재고를 수정하는 용도의 View라는 생각이 들었다. 
-* `해결` 메인 화면을 재고수정이 구현되어있는 ViewController가 아니라 재고수정 화면에 연결되어있는 Navigation Controller에 Segue를 연결해서 modal을 구현하고, bar button을 활용하여 Cancel 버튼을 구현해주었다.
+* `상황` 
+    * 초기 프로젝트 스토리보드에 Navigation Controller가 왜 두개로 나뉘어져 구현되어있는지 이유가 궁금했다. 알고보니 Navigation Bar를 이용하기 위함이였다. 하지만 쥬스메이커 메인화면에서 재고수정하기 버튼을 터치하게 되면 화면 이동방식은 modal이 되어야 한다고 생각했다. 
+* `이유`
+    * 네비게이션을 따라서 스택에 따른 화면을 이동하는 방식이 적절하지 못하다고 생각했기 때문이다. 임시적으로 화면에 들어가서 재고를 수정하는 용도의 View라는 생각이 들었다. 
+* `해결` 
+    * 메인 화면을 재고수정이 구현되어있는 ViewController가 아니라 재고수정 화면에 연결되어있는 Navigation Controller에 Segue를 연결해서 modal을 구현하고, bar button을 활용하여 Cancel 버튼을 구현해주었다.
 
-### 2. 이름은 같지만 타입이 다른 상황
-* `상황` 프로토콜(LocalizedError)을 사용자 정의 타입(RequestError)에 채택 후 프로토콜이 정의한 프로퍼티가 아니라, **이름은 같지만 타입이 다른 프로퍼티**(`String`, `String?`)를 구현해주었다. 
-* 이후 파라미터로 값을 전달하는 과정에서 타입이 정의한 프로퍼티(`errorDescription: String`)가 아니라 프로토콜에서 기본 구현이 된 프로퍼티(`errorDescription: String?`)가 전달되었다.
-* `이유` 여러 테스트를 거쳐 알아낸 결과, 같은 이름이지만 타입이 다른 두 프로퍼티가 공존하고 있을 때, 파라미터로 전달할 때에는 타입이 일치하는 프로퍼티가 들어갔다. 
-* `해결` 예를 들어 함수의 파라미터 후보로 String과 String? 두가지가 있고, 파라미터의 타입은 String? 이라면 컴파일러는 당연히 String?을 전달해주려고 할 것이다. 다만 최후의 후보가 String 뿐이라서 String? 자리에 String을 전달하는 경우 String을 String?으로 포장해줄 수는 있겠다. 당시에는 왜 String을 전달하고 있는데 왜 nil이 전달되는 것인지 이해가 가지 않았었는데, 그 의문을 질문을 통해서 해결하였다. 그리고 프로토콜을 채택한 후 정의되어있는대로 `String?`을 쓰지않고 논옵셔널 타입으로, 잘못된 구현을 해주고 있다는 것을 깨달았다.
+### "이름은 같지만 타입이 다른 상황"
+* `상황` 
+    * 프로토콜(LocalizedError)을 사용자 정의 타입(RequestError)에 채택 후 프로토콜이 정의한 프로퍼티가 아니라, **이름은 같지만 타입이 다른 프로퍼티**(`String`, `String?`)를 구현해주었다. 
+    * 이후 파라미터로 값을 전달하는 과정에서 타입이 정의한 프로퍼티(`errorDescription: String`)가 아니라 프로토콜에서 기본 구현이 된 프로퍼티(`errorDescription: String?`)가 전달되었다.
+* `이유` 
+    * 여러 테스트를 거쳐 알아낸 결과, 같은 이름이지만 타입이 다른 두 프로퍼티가 공존하고 있을 때, 파라미터로 전달할 때에는 타입이 일치하는 프로퍼티가 들어갔다. 
+* `해결` 
+    * 예를 들어 함수의 파라미터 후보로 String과 String? 두가지가 있고, 파라미터의 타입은 String? 이라면 컴파일러는 당연히 String?을 전달해주려고 할 것이다. 다만 최후의 후보가 String 뿐이라서 String? 자리에 String을 전달하는 경우 String을 String?으로 포장해줄 수는 있겠다. 당시에는 왜 String을 전달하고 있는데 왜 nil이 전달되는 것인지 이해가 가지 않았었는데, 그 의문을 질문을 통해서 해결하였다. 그리고 프로토콜을 채택한 후 정의되어있는대로 `String?`을 쓰지않고 논옵셔널 타입으로, 잘못된 구현을 해주고 있다는 것을 깨달았다.
 
-### 4. prepare() 메소드로 데이터가 제대로 전달이 안되는 경우
-* `상황` prepare 메소드를 이용하여 Label의 값들을 넘겨주는 기능을 추가하다가 다음 화면에서 정상적으로 값이 전달되지않아 Label.text 값이 nil인 것을 확인했다. View가 load가 되어있지 않아서 값을 전달하는게 불가능 했다.
-* `시도` 첫번째 방법으로 임시로 값을 담아둘 프로퍼티를 전환할 Controller에 구현해주고 넘겨주려고 했다. 하지만 해당 방법은 프로퍼티를 여러개 생성해야되서 코드 가독성 측면에서 떨어진다고 생각이 들었다.
-* `시도` 두번째 방법으로는 View를 미리 load할 수는 없을까 찾아보다가 loadViewIfNeeded() 메소드를 찾게되어 해당 메소드를 호출 후에 Label 값을 전달해주니 정상적으로 다음 화면에서 Label의 값이 적용되었다.
-* `이유` 그러나 위의 방법은 View를 넘어가기전에 **한번 더 load를 한다는 문제**점과 **두번째 화면의 속성값을 첫번째 화면에서 관리한다는 것이 문제**가 되었다. 
-* `해결` 두번째 화면의 값들은 해당 화면에서 관리를 할 수 있도록 전반적으로 코드를 수정해주었고, 화면이 넘어가는 과정에서는 **JuiceMaker의 인스턴스**만 넘겨줄 수 있도록 로직을 수정하여 해결하였다. 
+### "prepare() 메소드로 데이터가 제대로 전달이 안되는 경우"
+* `상황` 
+    * prepare 메소드를 이용하여 Label의 값들을 넘겨주는 기능을 추가하다가 다음 화면에서 정상적으로 값이 전달되지않아 Label.text 값이 nil인 것을 확인했다. View가 load가 되어있지 않아서 값을 전달하는게 불가능 했다.
+* `시도` 
+    * 첫번째 방법으로 임시로 값을 담아둘 프로퍼티를 전환할 Controller에 구현해주고 넘겨주려고 했다. 하지만 해당 방법은 프로퍼티를 여러개 생성해야되서 코드 가독성 측면에서 떨어진다고 생각이 들었다.
+    * 두번째 방법으로는 View를 미리 load할 수는 없을까 찾아보다가 loadViewIfNeeded() 메소드를 찾게되어 해당 메소드를 호출 후에 Label 값을 전달해주니 정상적으로 다음 화면에서 Label의 값이 적용되었다.
+* `이유` 
+    * 그러나 위의 방법은 View를 넘어가기전에 **한번 더 load를 한다는 문제**점과 **두번째 화면의 속성값을 첫번째 화면에서 관리한다는 것이 문제**가 되었다. 
+* `해결` 
+    * 두번째 화면의 값들은 해당 화면에서 관리를 할 수 있도록 전반적으로 코드를 수정해주었고, 화면이 넘어가는 과정에서는 **JuiceMaker의 인스턴스**만 넘겨줄 수 있도록 로직을 수정하여 해결하였다. 
 
-### 5. button에 Dynamic Type 적용이 안되는 상황
+### "button에 Dynamic Type 적용이 안되는 상황"
 
-- `상황` 보통 Label은 우측 Inspector에서 간단한 체크로 Automatically Adjusts Font를 설정해줄 수가 있는데 `버튼의 titleLabel`은 우측 Inspector에서 설정해줄 수가 없었다.
-- `이유와 해결` 찾아보니 **코드로 적용하는 방법 뿐**이였고, 버튼들 모두 실시간으로 Dynamic Type이 적용될 수 있도록 코드로 옵션을 활성화 해주었다.
+- `상황` 
+    - 보통 Label은 우측 Inspector에서 간단한 체크로 Automatically Adjusts Font를 설정해줄 수가 있는데 `버튼의 titleLabel`은 우측 Inspector에서 설정해줄 수가 없었다.
+- `이유와 해결` 
+    - 찾아보니 **코드로 적용하는 방법 뿐**이였고, 버튼들 모두 실시간으로 Dynamic Type이 적용될 수 있도록 코드로 옵션을 활성화 해주었다.
     
     ```swift
     // MARK: - Setup Label and Button
@@ -102,7 +126,7 @@
             orderMangoJuiceButton.titleLabel?.adjustsFontForContentSizeCategory = true
     ```
     
-- `또 다른 해결 방법` 위와 같이 직접 설정해주어도 되지만 코드 간결화를 주고싶어서 extension을 활용하여 코드를 수정해보았다.
+    - `또 다른 해결 방법` 위와 같이 직접 설정해주어도 되지만 코드 간결화를 주고싶어서 extension을 활용하여 코드를 수정해보았다.
     ```swift
     // 개선 후 코드
     extension UIButton {
@@ -126,35 +150,35 @@
 
 ## 🔥 새롭게 알게된 것
 
-### 1. Sequence에 대해
+### "Sequence에 대해"
 * `Dictionary(uniqueKeysWithValues:)`와 `zip` 사용하면서 `Sequence`의 대한 정확한 개념에 대해서 알아보았다.
     * Sequence는 원소들을 순서대로 하나씩 순회할 수 있는 타입을 의미한다.
     * Sequence에는 range만 들어가는 줄 알았는데 Array도 넣을 수 있었다.
     * Array는 Sequence 프로토콜을 기반으로 작성되었다는 사실을 알았다. Array 타입을 사용할 때 Sequence의 대부분의 기능을 제공해준다. map, filter뿐만 아니라 Sequence 안에서 특정 조건을 만족하는 첫번째 요소를 찾는 기능 까지 모두 다 Sequence 프로토콜 안에 정의되어 있다.
     * Sequence는 두가지 중요한 특징이 있는데 무한하거나, 유한하다. 그리고 한번만 이터레이트(iterate)할 수 있다.
 
-### 2. 연산자도 함수다!
+### "연산자도 함수다!"
 * 함수 내에서 클로저를 파라미터로 받아 +, - 등 연산자 기호를 전달해줄 수 있다.
     * 알고보니 연산자(+, -)도 하나의 함수였다. `static func + (lhs: Int, rhs: Int) -> Int`
     * 연산자 기호를 파라미터로 전달할 수 있다. `changeAmount(count: count, of: fruit, by: -)`
 
-### 3. Human Interface Guidelines
+### "Human Interface Guidelines"
 * Human Interface Guidelines를 참고하여 Alert 버튼의 위치를 구성했다.
     * Yes, No의 사용은 하지 말라고 되어있다.
     * 단순 수락시 OK, 취소는 Cancel
     * Cancel 버튼은 왼쪽에 위치해야 한다.
 
-### 4. 중첩타입의 용도 이해
+### "중첩타입의 용도 이해"
 
 * 맨 처음 Model을 구현할 때 당시에는 Fruit을 밖에서 사용하지 않는다고 생각하여 FruitStore 내부에 구현을 해주었다.
 * STEP 2를 구현하다보니 외부에서도 쓰이는 상황을 마주했다. 해결 내부로 다시 빼주는 작업을 하였고, 앞으로 설계할 때 정말 안에서만 쓰이는 타입인지 잘 고민하고 중첩 타입을 사용해야겠다는 큰 깨달음을 얻었다.
 
-### 5. Device Orientation
+### "Device Orientation"
 - 이 부분을 통해서 세로모드, 가로모드를 제어할 수 있다.
 
 ![](https://i.imgur.com/fqlvpGR.png)
 
-### 6. topViewController와 visibleViewController?
+### "topViewController와 visibleViewController?"
 
 ![](https://i.imgur.com/IVwBeca.jpg)
 
